@@ -1,19 +1,25 @@
+# Library imports
 import socket
 from tkinter import messagebox, Label, Tk, Button
 from _thread import start_new_thread
 
+# An object from the socket library
 first_player_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+# The host and port that the second player will use to connect
 host = "127.0.0.1"
 port = 8080
 
+# Binding the host and port and setting a listening limit
 first_player_socket.bind((host, port))
 first_player_socket.listen(5)
 
+# An instance of the tkinter library to implement the gui
 window = Tk()
 window.title("Tic Tac Toe: First Player")
 window.geometry("350x100")
 
+# Labeling for clarifying
 label = Label(window, text="Tic-Tac-Toe Game", font=("sans-serif", 20))
 label.grid(row=0, column=0)
 
@@ -23,6 +29,9 @@ firstLabel.grid(row=1, column=0)
 secondLabel = Label(window, text="Player2: O", font=("sans-serif", 15))
 secondLabel.grid(row=2, column=0)
 
+# This turn value is to keep track of whose turn it is
+# From firstClick function to ninthClick function they're all functions handling 
+# the 9 buttons of our game
 turn = True
 def firstClick():
     global turn
@@ -33,6 +42,7 @@ def firstClick():
         turn = False
         check()
 
+# This is an instanace for creating a button
 firstBtn = Button(window, text=" ", bg="blue", fg="white", width=3, 
     height=1, font=("sans-serif", 5), command=firstClick)
 firstBtn.grid(row = 0, column = 1)
@@ -143,9 +153,14 @@ ninthBtn = Button(window, text=" ", bg="blue", fg="white", width=3,
     height=1, font=("sans-serif", 5), command=ninthClick)
 ninthBtn.grid(row = 2, column = 3)
 
+# This is where i receive the message which consists of a number as a char
+# that char indicates which button was clicked from either the first player
+# or from the second player, when a player clicks a button the turn value turns the opposite
+# that prevents the player playing unless the other player has used his move
 def receive_thread(client):
     global turn
     while True:
+        # This is the step i get the number that indicates that the other player has clicked a button
         message = client.recv(2048).decode('utf-8')
         if message == '1' and firstBtn["text"] == " ":
             firstBtn["text"] = 'O'
@@ -176,6 +191,8 @@ def receive_thread(client):
             turn = True
         check()
 
+# Here is a flag so that i can kick the players out if they reached 9 moves without having a winner
+# the check method is for clarifying whether a player has won or not
 flag = 0
 def check():
     global flag
@@ -220,7 +237,7 @@ def check():
     if flag == 9 and winner != 1:
         messagebox.showinfo("Dead End!!", "You have reached a dead end where no one can win.")
         window.destroy()
-
+# The function gets the result of the checking from the check function and declares the winner
 def win(player):
     if player == 'X':
         playerNumber = 1
@@ -229,9 +246,13 @@ def win(player):
     messagebox.showinfo(f"CONGRATULATIONS", f"PLAYER{playerNumber}: '{player}'. You have won the game!!")
     window.destroy()
 
-
+# Socket accept
+# Starting a new thread to keep receiving messages
 client, address = first_player_socket.accept()
-print("Connection established")
 start_new_thread(receive_thread, (client,))
 
+# The last line at our code and its from the tkinter library
 window.mainloop()
+
+# The second_player is the same as the first_player, we just changes some simple steps like
+# replacing the binding with connecting and replacing the X and O values
